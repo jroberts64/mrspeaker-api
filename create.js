@@ -2,10 +2,8 @@ import uuid from "uuid";
 import * as dynamoDbLib from "./libs/dynamodb-lib";
 import { success, failure } from "./libs/response-lib";
 
-export function main(event, context, callback) {
-  // Request body is passed in as a JSON encoded string in 'event.body'
+export async function main(event, context) {
   const data = JSON.parse(event.body);
-
   const params = {
     TableName: process.env.tableName,
     Item: {
@@ -21,7 +19,6 @@ export function main(event, context, callback) {
     await dynamoDbLib.call("put", params);
     return success(params.Item);
   } catch (e) {
-    console.log(e);
     return failure({ status: false });
-  }  
+  }
 }
