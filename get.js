@@ -6,7 +6,7 @@ export async function main(event, context) {
     TableName: process.env.tableName,
     Key: {
       userId: event.requestContext.identity.cognitoIdentityId,
-      noteId: event.pathParameters.id
+      docId: event.pathParameters.id
     }
   };
 

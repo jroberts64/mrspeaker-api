@@ -8,7 +8,7 @@ export async function main(event, context) {
     TableName: process.env.tableName,
     Item: {
       userId: event.requestContext.identity.cognitoIdentityId,
-      noteId: uuid.v1(),
+      docId: uuid.v1(),
       content: data.content,
       attachment: data.attachment,
       createdAt: Date.now()
