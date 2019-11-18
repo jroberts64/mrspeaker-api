@@ -1,4 +1,4 @@
-service: notes-app-api
+service: speakToMe-app-api
 
 # Create an optimized package for our functions
 package:
