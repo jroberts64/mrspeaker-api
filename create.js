@@ -11,10 +11,11 @@ export async function main(event, context) {
       docId: uuid.v1(),
       content: data.content,
       attachment: data.attachment,
+      audio: data.attachment.substr(0, data.attachment.lastIndexOf(".")) + ".mp3",
       createdAt: Date.now()
     }
   };
-
+  console.log(event);
   try {
     await dynamoDbLib.call("put", params);
     return success(params.Item);

@@ -34,6 +34,10 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:us-east-1:*:table/docs"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: arn:aws:s3:::notes-app-s3-bucket-jcr/*
 
 functions:
   # Defines an HTTP API endpoint that calls the main function in create.js
@@ -110,6 +114,29 @@ functions:
           method: post
           cors: true
           authorizer: aws_iam
+
+  convert:
+    handler: convert.handler
+    events:
+      - s3:
+        bucket: "notes-app-s3-bucket-jcr"
+        event: s3:ObjectCreated:*
+        rules:
+          - suffix: .txt
+          - prefix: "private/us-east-1:"
+        existing: true
+
+  fix-colon-problem:
+    handler: fix-colon-problem.main
+    events:
+      - s3:
+        bucket: "notes-app-s3-bucket-jcr"
+        event: s3:ObjectCreated:*
+        rules:
+          - suffix: .mp3
+          - prefix: private/us-east-1_
+        existing: true
+
 
 # Create our resources with separate CloudFormation templates
 resources:

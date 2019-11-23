@@ -15,6 +15,9 @@ test-list:
 test-list-for-user:
 	apig-test $(CREDENTIALS) $(REGION) $(POOLS) $(URL) $(URLPATH)/$(id) $(GET)
 
+test-convert:
+	aws s3 cp tests/convertTest.txt s3://notes-app-s3-bucket-jcr/private/us-east-1:b8d57db8-8ffe-4b0a-9a9d-a57aa5b997b3/convertTest.txt
+
 test-create:
 	apig-test $(CREDENTIALS) $(REGION) $(POOLS) $(URL) $(URLPATH) $(POST) \
 		--body='{"content":"hello world","attachment":"hello.jpg"}'
