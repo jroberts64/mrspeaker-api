@@ -9,43 +9,62 @@ import AWS from "aws-sdk";
 var async = require('async');
 
 var s3 = new AWS.S3();
-
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export function main(event, context) {
 
-    var srcBucket = event.Records[0].s3.bucket.name;
-    var fromSrcKey = decodeURI(event.Records[0].s3.object.key);
-    var toSrcKey = fromSrcKey.replace("_", ":");
-    var filename = toSrcKey.split(".txt")[0] + ".mp3";
-    var copySource = srcBucket + "/" + fromSrcKey;
+    const bucket = event.Records[0].s3.bucket.name;
+    const tmpMp3Key = decodeURI(event.Records[0].s3.object.key);
+    var finalMp3Key = null;
 
     async.waterfall([
-        function _copy(next) {
-            console.log('************** _copy Function Called *****************');
+        function getFinalMp3Destination(next) {
+            console.log('************** getFinalMp3Destination Function Called *****************');
+            console.log('fromSrcKey ==> ' + tmpMp3Key);
+            var response = dynamoDb.get( {
+                TableName: process.env.tmpMp3Tablename,
+                 Key: {
+                    srcKey: tmpMp3Key
+                }
+            },next);
+            console.log('*********** finished getFinalMp3Destination', response);
+        },
+        function copyTmpMp3ToFinalDestination(response, next) {
+            finalMp3Key = response.Item.destKey;
+            console.log('************** copyTmpMp3ToFinalDestination Function Called *****************');
+            console.log(response);
+
             s3.copyObject({
-                CopySource: encodeURI(copySource),
-                Key: filename,
-                Bucket: srcBucket
+                CopySource: encodeURI(bucket + "/" + tmpMp3Key),
+                Bucket: bucket,
+                Key: finalMp3Key
             },next);
         },
-        function _delete(response, next) {
-            console.log('************** _delete Function Called *****************');
+        function removeTmpMp3File(response, next) {
+            console.log('************** removeTmpMp3File Function Called *****************');
             s3.deleteObject({
-                Key: fromSrcKey,
-                Bucket: srcBucket
+                Bucket: bucket,
+                Key: tmpMp3Key
+            },next);
+        },
+        function removeFinalMp3DestinationReminder(response, next) {
+            console.log('************** removeFinalMp3DestinationReminder Function Called *****************');
+            dynamoDb.delete({
+                TableName: process.env.tmpMp3Tablename,
+                 Key: {
+                    srcKey: tmpMp3Key
+                }
             },next);
         }
     ], function (err) {
         if (err) {
             console.error(
-                'Unable to copy ' + srcBucket + '/' + fromSrcKey +
-                'to ' + srcBucket + '/' + toSrcKey + '\n' +
+                'Unable to copy ' + bucket + '/' + tmpMp3Key +
                 ' due to an error: ' + JSON.stringify(err)
             );
         } else {
             console.log(
-                'Successfully copied ' + srcBucket + '/' + fromSrcKey +
-                'to ' + srcBucket + '/' + toSrcKey
+                'Successfully copied ' + bucket + '/' + tmpMp3Key
             );
         }
     });

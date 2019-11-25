@@ -19,6 +19,7 @@ provider:
   # under process.env.
   environment:
     tableName: docs
+    tmpMp3Tablename: mp3FilenameMapping
     stripeSecretKey: ${env:STRIPE_SECRET_KEY}
 
   # 'iamRoleStatements' defines the permission policy for the Lambda function.
@@ -134,7 +135,7 @@ functions:
         event: s3:ObjectCreated:*
         rules:
           - suffix: .mp3
-          - prefix: private/us-east-1_
+          - prefix: tmpMp3/
         existing: true
 
 
