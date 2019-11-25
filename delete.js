@@ -1,5 +1,7 @@
-import * as dynamoDbLib from "./libs/dynamodb-lib";
 import { success, failure } from "./libs/response-lib";
+var AWS = require('aws-sdk');
+
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function main(event, context) {
   const params = {
@@ -14,7 +16,7 @@ export async function main(event, context) {
   };
 
   try {
-    await dynamoDbLib.call("delete", params);
+    await dynamoDb.delete(params).promise();
     return success({ status: true });
   } catch (e) {
     return failure({ status: false });

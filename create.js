@@ -1,6 +1,8 @@
 import uuid from "uuid";
-import * as dynamoDbLib from "./libs/dynamodb-lib";
 import { success, failure } from "./libs/response-lib";
+var AWS = require('aws-sdk');
+
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function main(event, context) {
   const data = JSON.parse(event.body);
@@ -17,7 +19,7 @@ export async function main(event, context) {
   };
   console.log(event);
   try {
-    await dynamoDbLib.call("put", params);
+    await dynamoDb.put(params).promise();
     return success(params.Item);
   } catch (e) {
     console.log(e);
