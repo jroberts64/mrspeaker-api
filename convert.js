@@ -25,7 +25,7 @@
 var async = require('async');
 var AWS = require('aws-sdk');
 
-const outputS3KeyPrefix = "tmpMp3/";
+const outputS3KeyPrefix = process.env.tmpMp3Dir + "/";
 const s3 = new AWS.S3();
 const polly = new AWS.Polly();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -70,7 +70,7 @@ exports.handler = function(event, context, callback) {
             var tmpMp3Key = response.SynthesisTask.OutputUri.split(bucketName + "/")[1];
             var finalMp3Key = txtKey.split(".txt")[0] + ".mp3";
 
-            console.log("tmpMp3Key" + tmpMp3Key + "\n" +
+            console.log("tmpMp3Key: " + tmpMp3Key + "\n" +
                 "finalMp3Key = " + finalMp3Key + "\n" +
                 "bucket = " + bucketName);
 

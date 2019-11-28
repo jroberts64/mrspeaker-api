@@ -1,29 +1,37 @@
-service: speakToMe-app-api
+service: mrSpeaker-app-api
 
-# Create an optimized package for our functions
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  tableName: ${self:custom.stage}-docs
+  mp3FileMappingTableName: ${self:custom.stage}-mp3FilenameMapping
+  tmpMp3Dir: tmpMp3
+  
+# Create an optimized package for functions
 package:
   individually: true
 
 plugins:
-  - serverless-bundle # Package our functions with Webpack
+  - serverless-bundle # Package functions with Webpack
   - serverless-offline
   - serverless-dotenv-plugin # Load .env as environment variables
 
+
+  
 provider:
   name: aws
   runtime: nodejs10.x
-  stage: prod
+  stage: dev
   region: us-east-1
 
-  # These environment variables are made available to our functions
+  # These environment variables are made available to lambda functions
   # under process.env.
   environment:
-    tableName: docs
-    tmpMp3Tablename: mp3FilenameMapping
+    tableName: ${self:custom.tableName}
     stripeSecretKey: ${env:STRIPE_SECRET_KEY}
+    tmpMp3Tablename: ${self:custom.mp3FileMappingTableName}
+    tmpMp3Dir: ${self:custom.tmpMp3Dir}
 
-  # 'iamRoleStatements' defines the permission policy for the Lambda function.
-  # In this case Lambda functions are granted with permissions to access DynamoDB.
+  # 'iamRoleStatements' define permission policy for the Lambda function.
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -34,19 +42,42 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-east-1:*:table/docs"
+      Resource:
+        - "Fn::GetAtt": [ DocsTable, Arn ]
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "Fn::GetAtt": [ TmpMp3Table, Arn ]
     - Effect: Allow
       Action:
         - s3:*
-      Resource: arn:aws:s3:::notes-app-s3-bucket-jcr/*
+      Resource: 
+        - Fn::Join:
+          - ''
+          -
+            - 'arn:aws:s3:::'
+            - ${env:BUCKET}
+            - '/'
+            - ${self:custom.tmpMp3Dir}
+            - '/*'
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - polly:*
+      Resource: "*"
 
 functions:
   # Defines an HTTP API endpoint that calls the main function in create.js
-  # - path: url path is /docs
-  # - method: POST request
-  # - cors: enabled CORS (Cross-Origin Resource Sharing) for browser cross
-  #     domain api call
-  # - authorizer: authenticate using the AWS IAM role
   create:
     handler: create.main
     events:
@@ -57,9 +88,6 @@ functions:
           authorizer: aws_iam
 
   get:
-    # Defines an HTTP API endpoint that calls the main function in get.js
-    # - path: url path is /docs/{id}
-    # - method: GET request
     handler: get.main
     events:
       - http:
@@ -69,9 +97,6 @@ functions:
           authorizer: aws_iam
 
   list:
-    # Defines an HTTP API endpoint that calls the main function in list.js
-    # - path: url path is /docs
-    # - method: GET request
     handler: list.main
     events:
       - http:
@@ -81,9 +106,6 @@ functions:
           authorizer: aws_iam
 
   update:
-    # Defines an HTTP API endpoint that calls the main function in update.js
-    # - path: url path is /docs/{id}
-    # - method: PUT request
     handler: update.main
     events:
       - http:
@@ -93,9 +115,6 @@ functions:
           authorizer: aws_iam
 
   delete:
-    # Defines an HTTP API endpoint that calls the main function in delete.js
-    # - path: url path is /docs/{id}
-    # - method: DELETE request
     handler: delete.main
     events:
       - http:
@@ -105,9 +124,6 @@ functions:
           authorizer: aws_iam
 
   billing:
-    # Defines an HTTP API endpoint that calls the main function in billing.js
-    # - path: url path is /billing
-    # - method: POST request
     handler: billing.main
     events:
       - http:
@@ -120,26 +136,36 @@ functions:
     handler: convert.handler
     events:
       - s3:
-        bucket: "notes-app-s3-bucket-jcr"
-        event: s3:ObjectCreated:*
-        rules:
-          - suffix: .txt
-          - prefix: "private/us-east-1:"
-        existing: true
+          bucket: ${env:BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .txt
+            - prefix: "private/"
+          existing: true
 
   fix-colon-problem:
     handler: fix-colon-problem.main
     events:
       - s3:
-        bucket: "notes-app-s3-bucket-jcr"
-        event: s3:ObjectCreated:*
-        rules:
-          - suffix: .mp3
-          - prefix: tmpMp3/
-        existing: true
+          bucket: ${env:BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .mp3
+            - prefix: 
+                Fn::Join:
+                - ''
+                - - ${self:custom.tmpMp3Dir}
+                  - "/"
+          existing: true
 
-
-# Create our resources with separate CloudFormation templates
+# Create resources with separate CloudFormation templates
 resources:
   # API Gateway Errors
   - ${file(resources/api-gateway-errors.yml)}
+  # DynamoDB
+  - ${file(resources/dynamodb-table.yml)}
+  # S3
+  - ${file(resources/s3-bucket.yml)}
+  # Cognito
+  - ${file(resources/cognito-user-pool.yml)}
+  - ${file(resources/cognito-identity-pool.yml)}

@@ -1,0 +1,31 @@
+Resources:
+  DocsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.tableName}
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: docId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: docId
+          KeyType: RANGE
+      # Set the capacity to auto-scale
+      BillingMode: PAY_PER_REQUEST
+
+  TmpMp3Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.mp3FileMappingTableName}
+      AttributeDefinitions:
+        - AttributeName: srcKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: srcKey
+          KeyType: HASH
+      # Set the capacity to auto-scale
+      BillingMode: PAY_PER_REQUEST
+  

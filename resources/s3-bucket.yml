@@ -1,0 +1,65 @@
+Resources:
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${env:BUCKET}
+      CorsConfiguration:
+        CorsRules:
+          -
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            MaxAge: 3000
+  # ConvertLambdaFunction:
+  #   Type: AWS::Lambda::Function
+  #   Properties:
+  #     Handler: convert.handler
+  #     Role: arn:aws:iam::019135476568:role/speakToMe-app-api-prod-us-east-1-lambdaRole
+  #     #  Fn::GetAtt: [LambdaExecutionRole, Arn]
+  #     Code: 
+  #       S3Bucket: lambda-functions
+  #       S3Key: amilookup.zip
+  #     Runtime: nodejs12.x 
+
+
+
+      #NotificationConfiguration:
+      #  LambdaConfigurations:
+      #    -
+      #      Function: 
+      #        Fn::GetAtt: [ConvertLambdaFunction,Arn]
+      #      Event: s3:ObjectCreated:*
+      #      Filter:
+      #        S3Key: 
+      #          Rules:
+      #          -
+      #            Name: suffix
+      #            Value: .txt
+      #          -
+      #            Name: prefix
+      #            Value: private/
+
+  #ConvertTxtToSpeechPermissions:
+  #  Type: 'AWS::Lambda::Permission'
+  #  Properties:
+  #    FunctionName:
+  #      Fn::GetAtt: [ConvertLambdaFunction,Arn]
+  #    Principal: 's3.amazonaws.com'
+  #    Action: 'lambda:InvokeFunction'
+  #    SourceAccount:
+  #      Ref: AWS::AccountId
+  #    SourceArn: 
+  #      Fn::GetAtt: [AttachmentsBucket, Arn]
+
+# Print out the name of the bucket that is created
+Outputs:
+  AttachmentsBucketName:
+    Value:
+      Ref: AttachmentsBucket
