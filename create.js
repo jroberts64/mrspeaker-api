@@ -1,4 +1,4 @@
-import uuid from "uuid";
+import { v1 as uuid } from "uuid";
 import { success, failure } from "./libs/response-lib";
 var AWS = require('aws-sdk');
 
@@ -10,7 +10,7 @@ export async function main(event, context) {
     TableName: process.env.tableName,
     Item: {
       userId: event.requestContext.identity.cognitoIdentityId,
-      docId: uuid.v1(),
+      docId: uuid(),
       content: data.content,
       attachment: data.attachment,
       audio: data.attachment.substr(0, data.attachment.lastIndexOf(".")) + ".mp3",

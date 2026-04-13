@@ -19,7 +19,7 @@ plugins:
   
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs18.x
   stage: dev
   region: us-east-1
 
@@ -32,7 +32,9 @@ provider:
     tmpMp3Dir: ${self:custom.tmpMp3Dir}
 
   # 'iamRoleStatements' define permission policy for the Lambda function.
-  iamRoleStatements:
+  iam:
+    role:
+      statements:
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
