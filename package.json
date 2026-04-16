@@ -19,6 +19,9 @@
     "serverless-dotenv-plugin": "^6.0.0",
     "serverless-offline": "^13.9.0"
   },
+  "overrides": {
+    "axios": ">=1.15.0"
+  },
   "dependencies": {
     "serverless": "^3.39.0",
     "stripe": "^17.5.0",
