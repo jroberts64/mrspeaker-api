@@ -1,5 +1,7 @@
 service: mrSpeaker-app-api
 
+useDotenv: true
+
 custom:
   stage: ${opt:stage, self:provider.stage}
   tableName: ${self:custom.stage}-docs
@@ -11,15 +13,13 @@ package:
   individually: true
 
 plugins:
-  - serverless-bundle # Package functions with Webpack
   - serverless-offline
-  - serverless-dotenv-plugin # Load .env as environment variables
 
 
   
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs20.x
   stage: dev
   region: us-east-1
 
@@ -35,48 +35,48 @@ provider:
   iam:
     role:
       statements:
-    - Effect: Allow
-      Action:
-        - dynamodb:DescribeTable
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "Fn::GetAtt": [ DocsTable, Arn ]
-    - Effect: Allow
-      Action:
-        - dynamodb:DescribeTable
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "Fn::GetAtt": [ TmpMp3Table, Arn ]
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: 
-        - Fn::Join:
-          - ''
-          -
-            - 'arn:aws:s3:::'
-            - ${env:BUCKET}
-            - '/'
-            - ${self:custom.tmpMp3Dir}
-            - '/*'
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - polly:*
-      Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "Fn::GetAtt": [ DocsTable, Arn ]
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "Fn::GetAtt": [ TmpMp3Table, Arn ]
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource:
+            - Fn::Join:
+              - ''
+              -
+                - 'arn:aws:s3:::'
+                - ${env:BUCKET}
+                - '/'
+                - ${self:custom.tmpMp3Dir}
+                - '/*'
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - polly:*
+          Resource: "*"
 
 functions:
   # Defines an HTTP API endpoint that calls the main function in create.js
